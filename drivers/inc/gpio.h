@@ -1,0 +1,106 @@
+#pragma once
+#include "rcc.h"
+
+#define GPIOA_BASE 0x40020000UL
+#define GPIOB_BASE 0x40020400UL
+#define GPIOC_BASE 0x40020800UL
+
+typedef struct {
+	volatile uint32_t MODER;	// mode register
+	volatile uint32_t OTYPER;	// output type register
+	volatile uint32_t OSPEEDR;	// output speed register
+	volatile uint32_t PUPDR;	// pull-up/pull-down register
+	volatile uint32_t IDR;		// input data register
+	volatile uint32_t ODR;		// output data register
+	volatile uint32_t BSRR;		// bit set/reset register
+	volatile uint32_t LCKR;		// configuration lock register
+	volatile uint32_t AFRL;		// alternate function low
+	volatile uint32_t AFRH;		// alternate function high
+} GPIO_TypeDef;
+
+#define GPIOA ((GPIO_TypeDef*) GPIOA_BASE)
+#define GPIOB ((GPIO_TypeDef*) GPIOB_BASE)
+#define GPIOC ((GPIO_TypeDef*) GPIOC_BASE)
+
+typedef enum {
+	GPIO_Mode_Input = 0b00,
+	GPIO_Mode_Output= 0b01,
+	GPIO_Mode_Alt = 0b10,
+	GPIO_Mode_Analog = 0b11,
+} GPIO_Mode;
+
+typedef enum {
+	GPIO_Output_PushPull = 0,
+	GPIO_Output_OpenDrain = 1,
+} GPIO_OutputType;
+
+typedef enum {
+	GPIO_Speed_Low = 0b00,
+	GPIO_Speed_Med = 0b01,
+	GPIO_Speed_Fast = 0b10,
+	GPIO_Speed_High = 0b11,
+} GPIO_Speed;
+
+typedef enum {
+	GPIO_Pull_None = 0b00,
+	GPIO_Pull_Up = 0b01,
+	GPIO_Pull_Down = 0b10,
+} GPIO_Pull;
+
+typedef enum {
+	GPIO_Pin_0 = 0,
+	GPIO_Pin_1 = 1,
+	GPIO_Pin_2 = 2,
+	GPIO_Pin_3 = 3,
+	GPIO_Pin_4 = 4,
+	GPIO_Pin_5 = 5,
+	GPIO_Pin_6 = 6,
+	GPIO_Pin_7 = 7,
+	GPIO_Pin_8 = 8,
+	GPIO_Pin_9 = 9,
+	GPIO_Pin_10 = 10,
+	GPIO_Pin_11 = 11,
+	GPIO_Pin_12 = 12,
+	GPIO_Pin_13 = 13,
+	GPIO_Pin_14 = 14,
+	GPIO_Pin_15 = 15
+} GPIO_Pin;
+
+typedef struct {
+	GPIO_TypeDef* port;
+	GPIO_Pin pin;
+	GPIO_Mode mode;
+	GPIO_OutputType output_type;
+	GPIO_Speed speed;
+	GPIO_Pull pull;
+} GPIO_Config;
+
+void GPIO_Init(GPIO_Config* config);
+
+void GPIO_WritePin(GPIO_TypeDef* port, GPIO_Pin pin, uint8_t value);
+void GPIO_SetPin(GPIO_TypeDef* port, GPIO_Pin pin);
+void GPIO_ClearPin(GPIO_TypeDef* port, GPIO_Pin pin);
+void GPIO_TogglePin(GPIO_TypeDef* port, GPIO_Pin pin);
+uint8_t GPIO_ReadPin(GPIO_TypeDef* port, GPIO_Pin pin);
+
+typedef enum {
+	GPIOA_Port = 0,
+	GPIOB_Port = 1,
+	GPIOC_Port = 2,
+} GPIO_Port;
+
+static inline void RCC_GPIOClock_Enable(GPIO_Port port) { RCC_AHB1Clock_Enable((RCC_AHB1ENR_Bit)port); }
+
+static inline void RCC_GPIOAClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOAEN_Bit); }
+static inline void RCC_GPIOBClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOBEN_Bit); }
+static inline void RCC_GPIOCClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOCEN_Bit); }
+
+static inline void RCC_GPIOAClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOAEN_Bit); }
+static inline void RCC_GPIOBClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOBEN_Bit); }
+static inline void RCC_GPIOCClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOCEN_Bit); }
+
+static inline void RCC_DMA1Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA1EN_Bit); }
+static inline void RCC_DMA2Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA2EN_Bit); }
+
+static inline void RCC_DMA1Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA1EN_Bit); }
+static inline void RCC_DMA2Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA2EN_Bit); }

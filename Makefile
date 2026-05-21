@@ -12,7 +12,7 @@ SIZE	= arm-none-eabi-size
 
 TARGET = firmware
 
-C_SOURCES	= app/main.c
+C_SOURCES	= $(wildcard app/*.c drivers/**/*.c)
 ASM_SOURCES	= startup/mcl_startup.s
 LD_SCRIPT	= linker/mcl_stm32f446re.ld
 BUILD_DIR	= build
@@ -21,7 +21,8 @@ OBJECTS	= $(C_SOURCES:%.c=$(BUILD_DIR)/%.o)
 OBJECTS	+= $(ASM_SOURCES:%.s=$(BUILD_DIR)/%.o)
 
 C_FLAGS	 = $(MCU) -Wall -Wextra -O0 -g
-LD_FLAGS = $(MCU) -T$(LD_SCRIPT) -nostartfiles -nostdlib
+LD_FLAGS = $(MCU) -T$(LD_SCRIPT) -Wl,-Map=$(TARGET).map -Wl,--gc-sections -nostartfiles
+LD_LIBS  = -lc -lm -lgcc
 
 .PHONY: all elf bin hex clean
 	
@@ -38,7 +39,7 @@ $(BUILD_DIR)/%.o: %.c
 elf: $(TARGET).elf
 
 $(TARGET).elf: $(OBJECTS) $(LD_SCRIPT)
-	$(CC) $(OBJECTS) $(LD_FLAGS) -o $@
+	$(CC) $(OBJECTS) $(LD_FLAGS) $(LD_LIBS) -o $@
 
 bin: $(TARGET).elf $(TARGET).bin
 
