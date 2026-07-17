@@ -48,6 +48,25 @@ typedef enum {
 } GPIO_Pull;
 
 typedef enum {
+	AF0 = 0,
+	AF1 = 1,
+	AF2 = 2,
+	AF3 = 3,
+	AF4 = 4,
+	AF5 = 5,
+	AF6 = 6,
+	AF7 = 7,
+	AF8 = 8,
+	AF9 = 9,
+	AF10 = 10,
+	AF11 = 11,
+	AF12 = 12,
+	AF13 = 13,
+	AF14 = 14,
+	AF15 = 15,
+} GPIO_AlternateFunction;
+
+typedef enum {
 	GPIO_Pin_0 = 0,
 	GPIO_Pin_1 = 1,
 	GPIO_Pin_2 = 2,
@@ -73,6 +92,7 @@ typedef struct {
 	GPIO_OutputType output_type;
 	GPIO_Speed speed;
 	GPIO_Pull pull;
+	GPIO_AlternateFunction alternate_function;
 } GPIO_Config;
 
 void GPIO_Init(GPIO_Config* config);
@@ -89,18 +109,3 @@ typedef enum {
 	GPIOC_Port = 2,
 } GPIO_Port;
 
-static inline void RCC_GPIOClock_Enable(GPIO_Port port) { RCC_AHB1Clock_Enable((RCC_AHB1ENR_Bit)port); }
-
-static inline void RCC_GPIOAClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOAEN_Bit); }
-static inline void RCC_GPIOBClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOBEN_Bit); }
-static inline void RCC_GPIOCClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOCEN_Bit); }
-
-static inline void RCC_GPIOAClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOAEN_Bit); }
-static inline void RCC_GPIOBClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOBEN_Bit); }
-static inline void RCC_GPIOCClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOCEN_Bit); }
-
-static inline void RCC_DMA1Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA1EN_Bit); }
-static inline void RCC_DMA2Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA2EN_Bit); }
-
-static inline void RCC_DMA1Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA1EN_Bit); }
-static inline void RCC_DMA2Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA2EN_Bit); }

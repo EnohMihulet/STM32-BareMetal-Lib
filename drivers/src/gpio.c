@@ -1,17 +1,37 @@
 #include "../inc/gpio.h"
 
 void GPIO_Init(GPIO_Config* config) {
-	config->port->MODER &= ~(config->mode << (config->pin * 2));
-	config->port->MODER |=  (config->mode << (config->pin * 2));
+	uint32_t shift;
 
-	config->port->OTYPER &= ~(config->output_type << config->pin);
-	config->port->OTYPER |=  (config->output_type << config->pin);
+	config->port->OTYPER &= ~(0b1U << config->pin);
+	config->port->OTYPER |=  (((uint32_t)config->output_type & 0b1U) << config->pin);
 
-	config->port->OSPEEDR &= ~(config->speed << (config->pin * 2));
-	config->port->OSPEEDR |=  (config->speed << (config->pin * 2));
+	shift = config->pin * 2;
 
-	config->port->PUPDR &= ~(config->pull << (config->pin * 2));
-	config->port->PUPDR |=  (config->pull << (config->pin * 2));
+	config->port->MODER &= ~(0b11U << shift);
+	config->port->MODER |=  (((uint32_t)config->mode & 0b11U) << shift);
+
+	config->port->OSPEEDR &= ~(0b11U << shift);
+	config->port->OSPEEDR |=  (((uint32_t)config->speed & 0b11U) << shift);
+
+	config->port->PUPDR &= ~(0b11U << shift);
+	config->port->PUPDR |=  (((uint32_t)config->pull & 0b11U) << shift);
+
+	if (config->mode == GPIO_Mode_Alt) {
+		volatile uint32_t* afr;
+
+		if (config->pin < 8) {
+			afr = &config->port->AFRL;
+			shift = config->pin * 4;
+		}
+		else {
+			afr = &config->port->AFRH;
+			shift = (config->pin - 8) * 4;
+		}
+
+		*afr &= ~(0xFU << shift);
+		*afr |=  (((uint32_t)config->alternate_function & 0xFU) << shift);
+	}
 }
 
 void GPIO_WritePin(GPIO_TypeDef* port, GPIO_Pin pin, uint8_t value) {

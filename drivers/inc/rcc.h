@@ -37,3 +37,40 @@ static inline void RCC_AHB1Clock_Disable(RCC_AHB1ENR_Bit bit) {
 	MCL_CLEAR_BIT(RCC->AHB1ENR, bit);
 	(void)(RCC->AHB1ENR);
 }
+
+static inline void RCC_GPIOClock_Enable(uint8_t port) { RCC_AHB1Clock_Enable((RCC_AHB1ENR_Bit)port); }
+
+static inline void RCC_GPIOAClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOAEN_Bit); }
+static inline void RCC_GPIOBClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOBEN_Bit); }
+static inline void RCC_GPIOCClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOCEN_Bit); }
+
+static inline void RCC_GPIOAClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOAEN_Bit); }
+static inline void RCC_GPIOBClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOBEN_Bit); }
+static inline void RCC_GPIOCClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOCEN_Bit); }
+
+static inline void RCC_DMA1Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA1EN_Bit); }
+static inline void RCC_DMA2Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA2EN_Bit); }
+
+static inline void RCC_DMA1Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA1EN_Bit); }
+static inline void RCC_DMA2Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA2EN_Bit); }
+
+typedef enum {
+	RCC_APB1_USART2_Bit = 17,
+	RCC_APB1_USART3_Bit = 18,
+} RCC_APB1ENR_Bit;
+
+static inline void RCC_APB1Clock_Enable(RCC_APB1ENR_Bit bit) {
+	MCL_SET_BIT(RCC->APB1ENR, bit);
+	(void)(RCC->APB1ENR);
+}
+
+static inline void RCC_APB1Clock_Disable(RCC_APB1ENR_Bit bit) {
+	MCL_CLEAR_BIT(RCC->APB1ENR, bit);
+	(void)(RCC->APB1ENR);
+}
+
+static inline void RCC_USART2Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_USART2_Bit); }
+static inline void RCC_USART3Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_USART3_Bit); }
+
+static inline void RCC_USART2Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_USART2_Bit); }
+static inline void RCC_USART3Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_USART3_Bit); }

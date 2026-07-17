@@ -1,27 +1,36 @@
-#include "../drivers/inc/rcc.h"
 #include "../drivers/inc/gpio.h"
-#include "../core/mcl_helper.h"
+#include "../drivers/inc/usart.h"
 
 int main(void) {
 
-	RCC_GPIOAClock_Enable();
+	RCC_GPIOCClock_Enable();
 
-	GPIO_Config led  = {
-		.port = GPIOA,
-		.pin = GPIO_Pin_5,
-		.mode = GPIO_Mode_Output,
+	GPIO_Config button = {
+		.port = GPIOC,
+		.pin = GPIO_Pin_13,
+		.mode = GPIO_Mode_Input,
 		.output_type = GPIO_Output_PushPull,
 		.speed = GPIO_Speed_Low,
-		.pull = GPIO_Pull_None,
+		.pull = GPIO_Pull_Up,
 	};
 
-	GPIO_Init(&led);
+	GPIO_Init(&button);
+
+	USART2_Init();
+
+	USART_Transmit_Char(USART2, 'H');
+	USART_Transmit_Char(USART2, 'I');
+	USART_Transmit_Char(USART2, '?');
 
 	while (1) {
+		if (GPIO_ReadPin(GPIOC, GPIO_Pin_13) == 0) {
+			USART_Transmit_Char(USART2, 'H');
+			USART_Transmit_Char(USART2, 'I');
+			USART_Transmit_Char(USART2, '?');
 
-		GPIO_TogglePin(led.port, led.pin);
-		delay_ms(1000);
-
+			while (GPIO_ReadPin(GPIOC, GPIO_Pin_13) == 0) {
+			}
+		}
 	}
 
 	return 0;
