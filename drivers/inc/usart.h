@@ -144,3 +144,6 @@ static inline void USART_Set_StopBits(USART_TypeDef *usart, USART_Stop stop)
 void USART2_Init();
 
 void USART_Transmit_Char(USART_TypeDef* usart, const char c);
+void USART_Transmit_String(USART_TypeDef* usart, const char* s);
+char USART_Receive_Char(USART_TypeDef* usart);
+uint32_t USART_Receive_Line(USART_TypeDef* usart, char* buffer, uint32_t buffer_size);

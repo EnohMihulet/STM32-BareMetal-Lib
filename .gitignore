@@ -7,3 +7,6 @@ build/
 .cproject
 .settings
 .DS_Store
+.cache/
+STM32-BareMetal-Lib Default.launch
+compile_commands.json
