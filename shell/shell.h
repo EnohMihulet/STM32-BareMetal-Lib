@@ -36,6 +36,7 @@ typedef struct SHELL_Command {
 SHELL_Result SHELL_CommandHelp(int argc, const char* argv[]);
 SHELL_Result SHELL_CommandLed(int argc, const char* argv[]);
 SHELL_Result SHELL_CommandButton(int argc, const char* argv[]);
+SHELL_Result SHELL_CommandPwm(int argc, const char* argv[]);
 
 void SHELL_PrintCommand(const SHELL_Command* command);
 void SHELL_PrintCommandList(void);
@@ -45,6 +46,7 @@ void SHELL_Write(const char* s);
 #define SHELL_COMMANDS \
 	X(help, "help", SHELL_CommandHelp, 0, 1, "List available commands") \
 	X(led, "led", SHELL_CommandLed, 1, 1, "Set onboard LED: led on|off") \
-	X(button, "button", SHELL_CommandButton, 0, 0, "Read onboard button state")
+	X(button, "button", SHELL_CommandButton, 0, 0, "Read onboard button state") \
+	X(pwm, "pwm", SHELL_CommandPwm, 1, 2, "Test LED PWM: pwm start|stop|status|set <0-1000>|duty <0-100>")
 
 void SHELL_Start();

@@ -4,7 +4,7 @@
 
 .global VectorTable
 .global EntryPoint
-.global DefaultHandler
+.global Default_Handler
 
 .extern main
 
@@ -68,44 +68,56 @@ MainReturned:
 .size EntryPoint, . - EntryPoint
 
 
-.section .text.DefaultHandler, "ax", %progbits
-.type DefaultHandler, %function
+.section .text.Default_Handler, "ax", %progbits
+.type Default_Handler, %function
 .thumb_func
 
-DefaultHandler:
+Default_Handler:
 InfiniteLoop:
 	b InfiniteLoop
 
-.size DefaultHandler, . - DefaultHandler
+.size Default_Handler, . - Default_Handler
 
 
 /* Weak aliases for exception handlers */
 .weak NMI_Handler
-.thumb_set NMI_Handler, DefaultHandler
+.thumb_set NMI_Handler, Default_Handler
 
 .weak HardFault_Handler
-.thumb_set HardFault_Handler, DefaultHandler
+.thumb_set HardFault_Handler, Default_Handler
 
 .weak MemManage_Handler
-.thumb_set MemManage_Handler, DefaultHandler
+.thumb_set MemManage_Handler, Default_Handler
 
 .weak BusFault_Handler
-.thumb_set BusFault_Handler, DefaultHandler
+.thumb_set BusFault_Handler, Default_Handler
 
 .weak UsageFault_Handler
-.thumb_set UsageFault_Handler, DefaultHandler
+.thumb_set UsageFault_Handler, Default_Handler
 
 .weak SVC_Handler
-.thumb_set SVC_Handler, DefaultHandler
+.thumb_set SVC_Handler, Default_Handler
 
 .weak DebugMon_Handler
-.thumb_set DebugMon_Handler, DefaultHandler
+.thumb_set DebugMon_Handler, Default_Handler
 
 .weak PendSV_Handler
-.thumb_set PendSV_Handler, DefaultHandler
+.thumb_set PendSV_Handler, Default_Handler
 
 .weak SysTick_Handler
-.thumb_set SysTick_Handler, DefaultHandler
+.thumb_set SysTick_Handler, Default_Handler
+
+.weak TIM2_IRQHandler
+.thumb_set TIM2_IRQHandler, Default_Handler
+
+.weak TIM3_IRQHandler
+.thumb_set TIM3_IRQHandler, Default_Handler
+
+.weak TIM4_IRQHandler
+.thumb_set TIM4_IRQHandler, Default_Handler
+
+.weak TIM5_IRQHandler
+.thumb_set TIM5_IRQHandler, Default_Handler
 
 
 .section .isr_vector, "a", %progbits
@@ -130,5 +142,16 @@ VectorTable:
 	.word 0
 	.word PendSV_Handler
 	.word SysTick_Handler
+	.rept 28
+		.word Default_Handler
+	.endr
+	
+	.word TIM2_IRQHandler
+	.word TIM3_IRQHandler
+	.word TIM4_IRQHandler
+	.rept 19
+		.word Default_Handler
+	.endr
+	.word TIM5_IRQHandler
 
 .size VectorTable, . - VectorTable

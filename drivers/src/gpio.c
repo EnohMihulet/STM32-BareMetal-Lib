@@ -3,19 +3,13 @@
 void GPIO_Init(GPIO_Config* config) {
 	uint32_t shift;
 
-	config->port->OTYPER &= ~(0b1U << config->pin);
-	config->port->OTYPER |=  (((uint32_t)config->output_type & 0b1U) << config->pin);
+	MCL_WRITE_FIELD(config->port->OTYPER, config->pin, 1, config->output_type);
 
 	shift = config->pin * 2;
 
-	config->port->MODER &= ~(0b11U << shift);
-	config->port->MODER |=  (((uint32_t)config->mode & 0b11U) << shift);
-
-	config->port->OSPEEDR &= ~(0b11U << shift);
-	config->port->OSPEEDR |=  (((uint32_t)config->speed & 0b11U) << shift);
-
-	config->port->PUPDR &= ~(0b11U << shift);
-	config->port->PUPDR |=  (((uint32_t)config->pull & 0b11U) << shift);
+	MCL_WRITE_FIELD(config->port->MODER, shift, 2, config->mode);
+	MCL_WRITE_FIELD(config->port->OSPEEDR, shift, 2, config->speed);
+	MCL_WRITE_FIELD(config->port->PUPDR, shift, 2, config->pull);
 
 	if (config->mode == GPIO_Mode_Alt) {
 		volatile uint32_t* afr;
@@ -29,8 +23,7 @@ void GPIO_Init(GPIO_Config* config) {
 			shift = (config->pin - 8) * 4;
 		}
 
-		*afr &= ~(0xFU << shift);
-		*afr |=  (((uint32_t)config->alternate_function & 0xFU) << shift);
+		MCL_WRITE_FIELD(*afr, shift, 4, config->alternate_function);
 	}
 }
 
@@ -48,9 +41,9 @@ void GPIO_ClearPin(GPIO_TypeDef* port, GPIO_Pin pin) {
 }
 
 void GPIO_TogglePin(GPIO_TypeDef* port, GPIO_Pin pin) {
-	port->ODR ^= (1U << pin);
+	MCL_TOGGLE_BIT(port->ODR, pin);
 }
 
 uint8_t GPIO_ReadPin(GPIO_TypeDef* port, GPIO_Pin pin) {
-	return (port->IDR & (1U << pin)) ? 1 : 0;
+	return MCL_READ_BIT(port->IDR, pin) ? 1 : 0;
 }

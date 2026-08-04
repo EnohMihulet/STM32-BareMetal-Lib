@@ -55,6 +55,10 @@ static inline void RCC_DMA1Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_
 static inline void RCC_DMA2Clock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_DMA2EN_Bit); }
 
 typedef enum {
+	RCC_APB1_TIM2_Bit   = 0,
+	RCC_APB1_TIM3_Bit   = 1,
+	RCC_APB1_TIM4_Bit   = 2,
+	RCC_APB1_TIM5_Bit   = 3,
 	RCC_APB1_USART2_Bit = 17,
 	RCC_APB1_USART3_Bit = 18,
 } RCC_APB1ENR_Bit;
@@ -74,3 +78,13 @@ static inline void RCC_USART3Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_
 
 static inline void RCC_USART2Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_USART2_Bit); }
 static inline void RCC_USART3Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_USART3_Bit); }
+
+static inline void RCC_TIM2Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_TIM2_Bit); }
+static inline void RCC_TIM3Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_TIM3_Bit); }
+static inline void RCC_TIM4Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_TIM4_Bit); }
+static inline void RCC_TIM5Clock_Enable(void) { RCC_APB1Clock_Enable(RCC_APB1_TIM5_Bit); }
+
+static inline void RCC_TIM2Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM2_Bit); }
+static inline void RCC_TIM3Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM3_Bit); }
+static inline void RCC_TIM4Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM4_Bit); }
+static inline void RCC_TIM5Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM5_Bit); }
