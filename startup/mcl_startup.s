@@ -107,6 +107,24 @@ InfiniteLoop:
 .weak SysTick_Handler
 .thumb_set SysTick_Handler, Default_Handler
 
+.weak EXTI0_IRQHandler
+.thumb_set EXTI0_IRQHandler, Default_Handler
+
+.weak EXTI1_IRQHandler
+.thumb_set EXTI1_IRQHandler, Default_Handler
+
+.weak EXTI2_IRQHandler
+.thumb_set EXTI2_IRQHandler, Default_Handler
+
+.weak EXTI3_IRQHandler
+.thumb_set EXTI3_IRQHandler, Default_Handler
+
+.weak EXTI4_IRQHandler
+.thumb_set EXTI4_IRQHandler, Default_Handler
+
+.weak EXTI9_5_IRQHandler
+.thumb_set EXTI9_5_IRQHandler, Default_Handler
+
 .weak TIM2_IRQHandler
 .thumb_set TIM2_IRQHandler, Default_Handler
 
@@ -115,6 +133,9 @@ InfiniteLoop:
 
 .weak TIM4_IRQHandler
 .thumb_set TIM4_IRQHandler, Default_Handler
+
+.weak EXTI15_10_IRQHandler
+.thumb_set EXTI15_10_IRQHandler, Default_Handler
 
 .weak TIM5_IRQHandler
 .thumb_set TIM5_IRQHandler, Default_Handler
@@ -142,14 +163,30 @@ VectorTable:
 	.word 0
 	.word PendSV_Handler
 	.word SysTick_Handler
-	.rept 28
+	.rept 6
+		.word Default_Handler
+	.endr
+	.word EXTI0_IRQHandler
+	.word EXTI1_IRQHandler
+	.word EXTI2_IRQHandler
+	.word EXTI3_IRQHandler
+	.word EXTI4_IRQHandler
+	.rept 12
+		.word Default_Handler
+	.endr
+	.word EXTI9_5_IRQHandler
+	.rept 4
 		.word Default_Handler
 	.endr
 	
 	.word TIM2_IRQHandler
 	.word TIM3_IRQHandler
 	.word TIM4_IRQHandler
-	.rept 19
+	.rept 9
+		.word Default_Handler
+	.endr
+	.word EXTI15_10_IRQHandler
+	.rept 9
 		.word Default_Handler
 	.endr
 	.word TIM5_IRQHandler

@@ -1,22 +1,32 @@
-#include "../drivers/inc/pwm.h"
-#include "../drivers/inc/rcc.h"
-#include "../drivers/inc/usart.h"
+#include "../drivers/inc/exti.h"
+#include "board_button.h"
 #include "board_led.h"
+#include "limit_switch.h"
+#include "step_output.h"
+#include "../drivers/inc/usart.h"
 #include "../shell/shell.h"
 
+static void LimitSwitch_Callback(void) {
+	(void)STEP_Output_Stop();
+}
+
 int main(void) {
-	PWM_ChannelConfig led_pwm = {
-		.tim = TIM2,
-		.channel = TIM_Channel_1,
-		.timer_clock_hz = 16000000,
-		.frequency_hz = 1000,
-		.duty_per_mille = 500,
-		.polarity = TIM_OutputPolarity_ActiveHigh,
+	Board_Button_Init();
+	Board_LED_Init();
+	LIMIT_SWITCH_Init();
+	(void)STEP_Output_Init();
+	(void)STEP_Output_Start();
+
+	EXTI_Config exti_limit_switch = {
+		.port = LIMIT_SWITCH_Port_Get(),
+		.pin = LIMIT_SWITCH_Pin_Get(),
+		.trigger = LIMIT_SWITCH_EXTITrigger_Get(),
+		.interrupt_enable = 1,
+		.event_enable = 0,
 	};
 
-	Board_LED_PWM_Init();
-	RCC_TIM2Clock_Enable();
-	PWM_Channel_Init(&led_pwm);
+	(void)EXTI_Callback_Register(LIMIT_SWITCH_EXTILine_Get(), LimitSwitch_Callback);
+	(void)EXTI_Line_Configure(&exti_limit_switch);
 	USART2_Init();
 	SHELL_Start();
 	

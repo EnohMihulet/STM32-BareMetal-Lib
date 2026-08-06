@@ -88,3 +88,21 @@ static inline void RCC_TIM2Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_
 static inline void RCC_TIM3Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM3_Bit); }
 static inline void RCC_TIM4Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM4_Bit); }
 static inline void RCC_TIM5Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM5_Bit); }
+
+typedef enum {
+	RCC_APB2_SYSCFG_Bit = 14,
+} RCC_APB2ENR_Bit;
+
+static inline void RCC_APB2Clock_Enable(RCC_APB2ENR_Bit bit) {
+	MCL_SET_BIT(RCC->APB2ENR, bit);
+	(void)(RCC->APB2ENR);
+}
+
+static inline void RCC_APB2Clock_Disable(RCC_APB2ENR_Bit bit) {
+	MCL_CLEAR_BIT(RCC->APB2ENR, bit);
+	(void)(RCC->APB2ENR);
+}
+
+static inline void RCC_SYSCFGClock_Enable(void)  { RCC_APB2Clock_Enable(RCC_APB2_SYSCFG_Bit); }
+
+static inline void RCC_SYSCFGClock_Disable(void) { RCC_APB2Clock_Disable(RCC_APB2_SYSCFG_Bit); }
