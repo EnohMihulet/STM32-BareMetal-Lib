@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 #define MCL_SET_BIT(val, bit)		 ((val) |= (1UL << (bit)))

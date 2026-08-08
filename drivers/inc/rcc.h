@@ -2,8 +2,35 @@
 #include <stdint.h>
 
 #include "../../core/bit_math.h"
+#include "tim.h"
 
 #define RCC_BASE	0x40023800UL
+
+#ifndef GPIOA_BASE
+#define GPIOA_BASE 0x40020000UL
+#endif
+
+#ifndef GPIOB_BASE
+#define GPIOB_BASE 0x40020400UL
+#endif
+
+#ifndef GPIOC_BASE
+#define GPIOC_BASE 0x40020800UL
+#endif
+
+typedef struct GPIO_TypeDef GPIO_TypeDef;
+
+#ifndef GPIOA
+#define GPIOA ((GPIO_TypeDef*) GPIOA_BASE)
+#endif
+
+#ifndef GPIOB
+#define GPIOB ((GPIO_TypeDef*) GPIOB_BASE)
+#endif
+
+#ifndef GPIOC
+#define GPIOC ((GPIO_TypeDef*) GPIOC_BASE)
+#endif
 
 typedef struct {
 	volatile uint32_t CR;        // 0x00
@@ -34,11 +61,8 @@ static inline void RCC_AHB1Clock_Enable(RCC_AHB1ENR_Bit bit) {
 }
 
 static inline void RCC_AHB1Clock_Disable(RCC_AHB1ENR_Bit bit) {
-	MCL_CLEAR_BIT(RCC->AHB1ENR, bit);
-	(void)(RCC->AHB1ENR);
+	MCL_CLEAR_BIT(RCC->AHB1ENR, bit); (void)(RCC->AHB1ENR);
 }
-
-static inline void RCC_GPIOClock_Enable(uint8_t port) { RCC_AHB1Clock_Enable((RCC_AHB1ENR_Bit)port); }
 
 static inline void RCC_GPIOAClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOAEN_Bit); }
 static inline void RCC_GPIOBClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_GPIOBEN_Bit); }
@@ -47,6 +71,30 @@ static inline void RCC_GPIOCClock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_G
 static inline void RCC_GPIOAClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOAEN_Bit); }
 static inline void RCC_GPIOBClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOBEN_Bit); }
 static inline void RCC_GPIOCClock_Disable(void) { RCC_AHB1Clock_Disable(RCC_AHB1_GPIOCEN_Bit); }
+
+static inline void RCC_GPIOClock_Enable(GPIO_TypeDef* gpio) {
+	if (gpio == GPIOA) {
+		RCC_GPIOAClock_Enable();
+	}
+	else if (gpio == GPIOB) {
+		RCC_GPIOBClock_Enable();
+	}
+	else if (gpio == GPIOC) {
+		RCC_GPIOCClock_Enable();
+	}
+}
+
+static inline void RCC_GPIOClock_Disable(GPIO_TypeDef* gpio) {
+	if (gpio == GPIOA) {
+		RCC_GPIOAClock_Disable();
+	}
+	else if (gpio == GPIOB) {
+		RCC_GPIOBClock_Disable();
+	}
+	else if (gpio == GPIOC) {
+		RCC_GPIOCClock_Disable();
+	}
+}
 
 static inline void RCC_DMA1Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA1EN_Bit); }
 static inline void RCC_DMA2Clock_Enable(void) { RCC_AHB1Clock_Enable(RCC_AHB1_DMA2EN_Bit); }
@@ -88,6 +136,36 @@ static inline void RCC_TIM2Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_
 static inline void RCC_TIM3Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM3_Bit); }
 static inline void RCC_TIM4Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM4_Bit); }
 static inline void RCC_TIM5Clock_Disable(void) { RCC_APB1Clock_Disable(RCC_APB1_TIM5_Bit); }
+
+static inline void RCC_TIMClock_Enable(TIM_GP_TypeDef* tim) {
+	if (tim == TIM2) {
+		RCC_TIM2Clock_Enable();
+	}
+	else if (tim == TIM3) {
+		RCC_TIM3Clock_Enable();
+	}
+	else if (tim == TIM4) {
+		RCC_TIM4Clock_Enable();
+	}
+	else if (tim == TIM5) {
+		RCC_TIM5Clock_Enable();
+	}
+}
+
+static inline void RCC_TIMClock_Disable(TIM_GP_TypeDef* tim) {
+	if (tim == TIM2) {
+		RCC_TIM2Clock_Disable();
+	}
+	else if (tim == TIM3) {
+		RCC_TIM3Clock_Disable();
+	}
+	else if (tim == TIM4) {
+		RCC_TIM4Clock_Disable();
+	}
+	else if (tim == TIM5) {
+		RCC_TIM5Clock_Disable();
+	}
+}
 
 typedef enum {
 	RCC_APB2_SYSCFG_Bit = 14,

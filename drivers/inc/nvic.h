@@ -26,10 +26,12 @@ typedef enum {
 } IRQ_Number;
 
 static inline void NVIC_IRQ_Enable(IRQ_Number irq_number) {
-	if (irq_number == IRQ_NUMBER_NONE || irq_number >= 128) return;
-	NVIC_ISER[irq_number / 32] = 1UL << (irq_number % 32);
+	uint32_t irq = (uint32_t)irq_number;
+	if (irq == (uint32_t)IRQ_NUMBER_NONE || irq >= 128U) return;
+	NVIC_ISER[irq / 32U] = 1UL << (irq % 32U);
 }
 static inline void NVIC_IRQ_Disable(IRQ_Number irq_number) {
-	if (irq_number == IRQ_NUMBER_NONE || irq_number >= 128) return;
-	NVIC_ICER[irq_number / 32] = 1UL << (irq_number % 32);
+	uint32_t irq = (uint32_t)irq_number;
+	if (irq == (uint32_t)IRQ_NUMBER_NONE || irq >= 128U) return;
+	NVIC_ICER[irq / 32U] = 1UL << (irq % 32U);
 }

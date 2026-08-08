@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 typedef uint8_t  u8;
@@ -12,5 +14,4 @@ typedef int64_t  s64;
 
 #define MCL_STATUS_CODES 	\
 	X(MCL_OK)		\
-
 

@@ -186,7 +186,7 @@ typedef struct {
 	uint8_t auto_reload_preload;
 } TIM_Config;
 
-typedef void (*TIM_Callback)(void);
+typedef void (*TIM_Callback)(void* context);
 
 void TIM_Init(TIM_Config* config);
 void TIM_Start(TIM_GP_TypeDef* tim);
@@ -209,7 +209,7 @@ void TIM_Compare_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, uint32_t compare)
 uint32_t TIM_Compare_Get(TIM_GP_TypeDef* tim, TIM_Channel channel);
 uint8_t TIM_UpdateFlag_IsSet(TIM_GP_TypeDef* tim);
 void TIM_UpdateFlag_Clear(TIM_GP_TypeDef* tim);
-void TIM_UpdateCallback_Register(TIM_GP_TypeDef* tim, TIM_Callback callback);
+void TIM_UpdateCallback_Register(TIM_GP_TypeDef* tim, TIM_Callback callback, void* context);
 
 void TIM2_IRQHandler(void);
 void TIM3_IRQHandler(void);

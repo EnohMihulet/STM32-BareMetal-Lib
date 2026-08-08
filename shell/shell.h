@@ -33,26 +33,10 @@ typedef struct SHELL_Command {
 	const char* help;
 } SHELL_Command;
 
-SHELL_Result SHELL_CommandHelp(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandLed(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandButton(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandPwm(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandStep(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandExti(int argc, const char* argv[]);
-SHELL_Result SHELL_CommandSwitch(int argc, const char* argv[]);
-
+void SHELL_Commands_Set(const SHELL_Command* commands, uint32_t command_count);
 void SHELL_PrintCommand(const SHELL_Command* command);
 void SHELL_PrintCommandList(void);
 const SHELL_Command* SHELL_LookupCommand(const char* name);
 void SHELL_Write(const char* s);
-
-#define SHELL_COMMANDS \
-	X(help, "help", SHELL_CommandHelp, 0, 1, "List available commands") \
-	X(led, "led", SHELL_CommandLed, 1, 1, "Set onboard LED: led on|off") \
-	X(button, "button", SHELL_CommandButton, 0, 0, "Read onboard button state") \
-	X(pwm, "pwm", SHELL_CommandPwm, 1, 2, "Test LED PWM: pwm start|stop|status|set <0-1000>|duty <0-100>") \
-	X(step, "step", SHELL_CommandStep, 1, 2, "Test STEP output: step start|stop|status|freq <hz>|set <hz>") \
-	X(exti, "exti", SHELL_CommandExti, 2, 2, "Test EXTI: exti swier|pending|clear <0-22>") \
-	X(switch, "switch", SHELL_CommandSwitch, 0, 0, "Read switch state as active or released")
 
 void SHELL_Start();

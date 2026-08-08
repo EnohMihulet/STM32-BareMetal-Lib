@@ -34,6 +34,8 @@ typedef enum {
 } USART_SR_Bit;
 
 static inline void USART_BaudRate_Set(USART_TypeDef* usart, uint32_t baud) {
+	if (usart == 0 || baud == 0) return;
+
 	usart->BRR = (CLOCK_SPEED_HZ + (baud / 2U)) / baud;
 	(void)(usart->BRR);
 }

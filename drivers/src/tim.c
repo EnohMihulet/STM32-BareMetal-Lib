@@ -1,21 +1,41 @@
 #include "../inc/tim.h"
 
 static TIM_Callback tim2_update_callback;
-static TIM_Callback tim3_update_callback;
-static TIM_Callback tim4_update_callback;
-static TIM_Callback tim5_update_callback;
+static void* tim2_update_context;
 
-static void TIM_UpdateInterrupt_Handle(TIM_GP_TypeDef* tim, TIM_Callback callback) {
+static TIM_Callback tim3_update_callback;
+static void* tim3_update_context;
+
+static TIM_Callback tim4_update_callback;
+static void* tim4_update_context;
+
+static TIM_Callback tim5_update_callback;
+static void* tim5_update_context;
+
+#define TIM_TIMER_PRESCALER_MAX 65536UL
+#define TIM_TIMER_16BIT_PERIOD_MAX 65536UL
+
+static uint8_t TIM_Timer_IsValid(TIM_GP_TypeDef* tim) {
+	return tim == TIM2 || tim == TIM3 || tim == TIM4 || tim == TIM5;
+}
+
+static uint8_t TIM_AutoReload_IsValid(TIM_GP_TypeDef* tim, uint32_t auto_reload) {
+	return (tim != TIM3 && tim != TIM4) || auto_reload <= TIM_TIMER_16BIT_PERIOD_MAX;
+}
+
+static void TIM_UpdateInterrupt_Handle(TIM_GP_TypeDef* tim, TIM_Callback callback, void* context) {
 	if (TIM_UpdateFlag_IsSet(tim)) {
 		TIM_UpdateFlag_Clear(tim);
 		if (callback != 0) {
-			callback();
+			callback(context);
 		}
 	}
 }
 
 void TIM_Init(TIM_Config* config) {
-	if (config->prescaler == 0 || config->auto_reload == 0) return;
+	if (config == 0 || !TIM_Timer_IsValid(config->tim)) return;
+	if (config->prescaler == 0 || config->prescaler > TIM_TIMER_PRESCALER_MAX) return;
+	if (config->auto_reload == 0 || !TIM_AutoReload_IsValid(config->tim, config->auto_reload)) return;
 
 	TIM_Stop(config->tim);
 
@@ -35,19 +55,26 @@ void TIM_Init(TIM_Config* config) {
 	config->tim->ARR = config->auto_reload - 1;
 
 	MCL_SET_BIT(config->tim->EGR, TIM_EGR_UG_Bit);
+	TIM_UpdateFlag_Clear(config->tim);
 }
 
 void TIM_Start(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_SET_BIT(tim->CR1, TIM_CR1_CEN_Bit);
 	(void)(tim->CR1);
 }
 
 void TIM_Stop(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_CLEAR_BIT(tim->CR1, TIM_CR1_CEN_Bit);
 	(void)(tim->CR1);
 }
 
 void TIM_Reset(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	TIM_Stop(tim);
 
 	if (MCL_READ_BIT(tim->CR1, TIM_CR1_DIR_Bit) == TIM_Direction_Upcounter) {
@@ -61,26 +88,36 @@ void TIM_Reset(TIM_GP_TypeDef* tim) {
 }
 
 void TIM_AutoReloadPreload_Enable(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_SET_BIT(tim->CR1, TIM_CR1_ARPE_Bit);
 	(void)(tim->CR1);
 }
 
 void TIM_AutoReloadPreload_Disable(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_CLEAR_BIT(tim->CR1, TIM_CR1_ARPE_Bit);
 	(void)(tim->CR1);
 }
 
 void TIM_UpdateInterrupt_Enable(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_SET_BIT(tim->DIER, TIM_DIER_UIE_Bit);
 	(void)(tim->DIER);
 }
 
 void TIM_UpdateInterrupt_Disable(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_CLEAR_BIT(tim->DIER, TIM_DIER_UIE_Bit);
 	(void)(tim->DIER);
 }
 
 void TIM_CaptureCompareSelection_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, CCMR_CCxS selection) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_WRITE_FIELD(tim->CCMR1, CCMR1_CC1S_Bit, CCMR_CCxS_WIDTH, selection); break;
 		case TIM_Channel_2: MCL_WRITE_FIELD(tim->CCMR1, CCMR1_CC2S_Bit, CCMR_CCxS_WIDTH, selection); break;
@@ -90,6 +127,8 @@ void TIM_CaptureCompareSelection_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, C
 }
 
 void TIM_OutputComparePreload_Enable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_SET_BIT(tim->CCMR1, CCMR1_OC1PE_Bit); break;
 		case TIM_Channel_2: MCL_SET_BIT(tim->CCMR1, CCMR1_OC2PE_Bit); break;
@@ -99,6 +138,8 @@ void TIM_OutputComparePreload_Enable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
 }
 
 void TIM_OutputComparePreload_Disable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_CLEAR_BIT(tim->CCMR1, CCMR1_OC1PE_Bit); break;
 		case TIM_Channel_2: MCL_CLEAR_BIT(tim->CCMR1, CCMR1_OC2PE_Bit); break;
@@ -108,6 +149,8 @@ void TIM_OutputComparePreload_Disable(TIM_GP_TypeDef* tim, TIM_Channel channel) 
 }
 
 void TIM_OutputCompareMode_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, CCMR_OCxM mode) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_WRITE_FIELD(tim->CCMR1, CCMR1_OC1M_Bit, CCMR_OCxM_WIDTH, mode); break;
 		case TIM_Channel_2: MCL_WRITE_FIELD(tim->CCMR1, CCMR1_OC2M_Bit, CCMR_OCxM_WIDTH, mode); break;
@@ -117,6 +160,8 @@ void TIM_OutputCompareMode_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, CCMR_OC
 }
 
 void TIM_Channel_Enable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_SET_BIT(tim->CCER, CCER_CC1E_Bit); break;
 		case TIM_Channel_2: MCL_SET_BIT(tim->CCER, CCER_CC2E_Bit); break;
@@ -126,6 +171,8 @@ void TIM_Channel_Enable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
 }
 
 void TIM_Channel_Disable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_CLEAR_BIT(tim->CCER, CCER_CC1E_Bit); break;
 		case TIM_Channel_2: MCL_CLEAR_BIT(tim->CCER, CCER_CC2E_Bit); break;
@@ -135,6 +182,8 @@ void TIM_Channel_Disable(TIM_GP_TypeDef* tim, TIM_Channel channel) {
 }
 
 uint8_t TIM_Channel_IsEnabled(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return 0;
+
 	switch (channel) {
 		case TIM_Channel_1: return MCL_READ_BIT(tim->CCER, CCER_CC1E_Bit);
 		case TIM_Channel_2: return MCL_READ_BIT(tim->CCER, CCER_CC2E_Bit);
@@ -146,6 +195,8 @@ uint8_t TIM_Channel_IsEnabled(TIM_GP_TypeDef* tim, TIM_Channel channel) {
 }
 
 void TIM_OutputPolarity_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, TIM_OutputPolarity polarity) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: MCL_WRITE_FIELD(tim->CCER, CCER_CC1P_Bit, 1, polarity); break;
 		case TIM_Channel_2: MCL_WRITE_FIELD(tim->CCER, CCER_CC2P_Bit, 1, polarity); break;
@@ -155,6 +206,8 @@ void TIM_OutputPolarity_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, TIM_Output
 }
 
 void TIM_Compare_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, uint32_t compare) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	switch (channel) {
 		case TIM_Channel_1: tim->CCR1 = compare; break;
 		case TIM_Channel_2: tim->CCR2 = compare; break;
@@ -164,6 +217,8 @@ void TIM_Compare_Set(TIM_GP_TypeDef* tim, TIM_Channel channel, uint32_t compare)
 }
 
 uint32_t TIM_Compare_Get(TIM_GP_TypeDef* tim, TIM_Channel channel) {
+	if (!TIM_Timer_IsValid(tim)) return 0;
+
 	switch (channel) {
 		case TIM_Channel_1: return tim->CCR1;
 		case TIM_Channel_2: return tim->CCR2;
@@ -175,40 +230,48 @@ uint32_t TIM_Compare_Get(TIM_GP_TypeDef* tim, TIM_Channel channel) {
 }
 
 uint8_t TIM_UpdateFlag_IsSet(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return 0;
+
 	return MCL_READ_BIT(tim->SR, TIM_SR_UIF_Bit);
 }
 
 void TIM_UpdateFlag_Clear(TIM_GP_TypeDef* tim) {
+	if (!TIM_Timer_IsValid(tim)) return;
+
 	MCL_CLEAR_BIT(tim->SR, TIM_SR_UIF_Bit);
 }
 
-void TIM_UpdateCallback_Register(TIM_GP_TypeDef* tim, TIM_Callback callback) {
+void TIM_UpdateCallback_Register(TIM_GP_TypeDef* tim, TIM_Callback callback, void* context) {
 	if (tim == TIM2) {
 		tim2_update_callback = callback;
+		tim2_update_context = context;
 	}
 	else if (tim == TIM3) {
 		tim3_update_callback = callback;
+		tim3_update_context = context;
 	}
 	else if (tim == TIM4) {
 		tim4_update_callback = callback;
+		tim4_update_context = context;
 	}
 	else if (tim == TIM5) {
 		tim5_update_callback = callback;
+		tim5_update_context = context;
 	}
 }
 
 void TIM2_IRQHandler(void) {
-	TIM_UpdateInterrupt_Handle(TIM2, tim2_update_callback);
+	TIM_UpdateInterrupt_Handle(TIM2, tim2_update_callback, tim2_update_context);
 }
 
 void TIM3_IRQHandler(void) {
-	TIM_UpdateInterrupt_Handle(TIM3, tim3_update_callback);
+	TIM_UpdateInterrupt_Handle(TIM3, tim3_update_callback, tim3_update_context);
 }
 
 void TIM4_IRQHandler(void) {
-	TIM_UpdateInterrupt_Handle(TIM4, tim4_update_callback);
+	TIM_UpdateInterrupt_Handle(TIM4, tim4_update_callback, tim4_update_context);
 }
 
 void TIM5_IRQHandler(void) {
-	TIM_UpdateInterrupt_Handle(TIM5, tim5_update_callback);
+	TIM_UpdateInterrupt_Handle(TIM5, tim5_update_callback, tim5_update_context);
 }

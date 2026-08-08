@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 #define CLOCK_SPEED_HZ 16000000UL

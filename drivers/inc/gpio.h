@@ -1,11 +1,19 @@
 #pragma once
 #include "rcc.h"
 
+#ifndef GPIOA_BASE
 #define GPIOA_BASE 0x40020000UL
-#define GPIOB_BASE 0x40020400UL
-#define GPIOC_BASE 0x40020800UL
+#endif
 
-typedef struct {
+#ifndef GPIOB_BASE
+#define GPIOB_BASE 0x40020400UL
+#endif
+
+#ifndef GPIOC_BASE
+#define GPIOC_BASE 0x40020800UL
+#endif
+
+typedef struct GPIO_TypeDef {
 	volatile uint32_t MODER;	// mode register
 	volatile uint32_t OTYPER;	// output type register
 	volatile uint32_t OSPEEDR;	// output speed register
@@ -17,10 +25,17 @@ typedef struct {
 	volatile uint32_t AFRL;		// alternate function low
 	volatile uint32_t AFRH;		// alternate function high
 } GPIO_TypeDef;
-
+#ifndef GPIOA
 #define GPIOA ((GPIO_TypeDef*) GPIOA_BASE)
+#endif
+
+#ifndef GPIOB
 #define GPIOB ((GPIO_TypeDef*) GPIOB_BASE)
+#endif
+
+#ifndef GPIOC
 #define GPIOC ((GPIO_TypeDef*) GPIOC_BASE)
+#endif
 
 typedef enum {
 	GPIO_Mode_Input = 0b00,
@@ -108,4 +123,3 @@ typedef enum {
 	GPIOB_Port = 1,
 	GPIOC_Port = 2,
 } GPIO_Port;
-

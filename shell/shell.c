@@ -1,15 +1,10 @@
 #include "shell.h"
-#include "../drivers/inc/usart.h"
+#include "usart.h"
 
 #define SHELL_INPUT_BUFFER_SIZE 64
 
-#define X(CODE, NAME, FUNCTION, MIN, MAX, DESCRIPTION) {NAME, FUNCTION, MIN, MAX, DESCRIPTION},
-static const SHELL_Command SHELL_Commands[] = {
-	SHELL_COMMANDS
-};
-#undef X
-
-#define SHELL_COMMAND_COUNT ((uint32_t)(sizeof(SHELL_Commands) / sizeof(SHELL_Commands[0])))
+static const SHELL_Command* shell_commands;
+static uint32_t shell_command_count;
 
 #define X(RESULT, MESSAGE) MESSAGE,
 static const char* const SHELL_ResultMessages[SHELL_RESULT_COUNT] = {
@@ -35,6 +30,11 @@ void SHELL_Write(const char* s) {
 	USART_Transmit_String(USART2, s);
 }
 
+void SHELL_Commands_Set(const SHELL_Command* commands, uint32_t command_count) {
+	shell_commands = commands;
+	shell_command_count = command_count;
+}
+
 static void SHELL_PrintResult(SHELL_Result result) {
 	if ((uint32_t)result >= SHELL_RESULT_COUNT) {
 		result = SHELL_RESULT_INTERNAL;
@@ -52,8 +52,8 @@ void SHELL_PrintCommand(const SHELL_Command* command) {
 }
 
 void SHELL_PrintCommandList(void) {
-	for (uint32_t i = 0; i < SHELL_COMMAND_COUNT; i++) {
-		SHELL_PrintCommand(&SHELL_Commands[i]);
+	for (uint32_t i = 0; i < shell_command_count; i++) {
+		SHELL_PrintCommand(&shell_commands[i]);
 	}
 }
 
@@ -89,9 +89,9 @@ static SHELL_Result SHELL_ParseArgs(char* input, const char* argv[], uint32_t ma
 }
 
 const SHELL_Command* SHELL_LookupCommand(const char* name) {
-	for (uint32_t i = 0; i < SHELL_COMMAND_COUNT; i++) {
-		if (SHELL_StringEquals(name, SHELL_Commands[i].name)) {
-			return &SHELL_Commands[i];
+	for (uint32_t i = 0; i < shell_command_count; i++) {
+		if (SHELL_StringEquals(name, shell_commands[i].name)) {
+			return &shell_commands[i];
 		}
 	}
 

@@ -25,6 +25,15 @@
 EntryPoint:
 	ldr sp, =_estack
 
+/* Enable CP10/CP11 FPU access for the hard-float build. */
+	ldr r0, =0xE000ED88
+	ldr r1, [r0]
+	ldr r2, =0x00F00000
+	orrs r1, r1, r2
+	str r1, [r0]
+	dsb
+	isb
+
 /* Copy .data from FLASH to RAM */
 CopyDataInit:
 	ldr r0, =_sdata      /* RAM destination start */

@@ -1,5 +1,5 @@
 #include "board_button.h"
-#include "../drivers/inc/gpio.h"
+#include "gpio.h"
 
 #define BOARD_BUTTON_PORT GPIOC
 #define BOARD_BUTTON_PIN GPIO_Pin_13

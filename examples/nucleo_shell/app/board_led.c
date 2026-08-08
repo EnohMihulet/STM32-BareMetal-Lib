@@ -1,5 +1,5 @@
 #include "board_led.h"
-#include "../drivers/inc/gpio.h"
+#include "gpio.h"
 
 #define BOARD_LED_PORT GPIOA
 #define BOARD_LED_PIN GPIO_Pin_5
