@@ -1,7 +1,13 @@
 #include "shell.h"
-#include "usart.h"
+#include "../drivers/inc/usart.h"
 
 #define SHELL_INPUT_BUFFER_SIZE 64
+#define SHELL_CHAR_BACKSPACE '\b'
+#define SHELL_CHAR_DELETE 0x7f
+
+static char input_buffer[SHELL_INPUT_BUFFER_SIZE];
+static const char* argv[SHELL_MAX_TOKENS];
+static uint32_t input_index;
 
 static const SHELL_Command* shell_commands;
 static uint32_t shell_command_count;
@@ -28,6 +34,10 @@ static uint8_t SHELL_StringEquals(const char* a, const char* b) {
 
 void SHELL_Write(const char* s) {
 	USART_Transmit_String(USART2, s);
+}
+
+void SHELL_WriteChar(const char c) {
+	USART_Transmit_Char(USART2, c);
 }
 
 void SHELL_Commands_Set(const SHELL_Command* commands, uint32_t command_count) {
@@ -112,35 +122,67 @@ static SHELL_Result SHELL_DispatchCommand(const SHELL_Command* command, uint32_t
 	return command->handler((int)command_argc, &argv[1]);
 }
 
-void SHELL_Start() {
-	char buf[SHELL_INPUT_BUFFER_SIZE];
-	const char* argv[SHELL_MAX_TOKENS];
+void SHELL_Init() {
+	for (uint32_t i = 0; i < SHELL_INPUT_BUFFER_SIZE; i++) input_buffer[i] = 0;
+	for (uint32_t i = 0; i < SHELL_MAX_TOKENS; i++) argv[i] = 0;
+	input_index = 0;
+	SHELL_Write("> ");
+}
 
-	while (1) {
+void SHELL_Update() {
+	if (USART_Receive_Char(USART2, &input_buffer[input_index]) != 0) return;
+
+	if (input_buffer[input_index] == SHELL_CHAR_BACKSPACE || input_buffer[input_index] == SHELL_CHAR_DELETE) {
+		if (input_index > 0) {
+			input_index -= 1;
+			SHELL_Write("\b \b");
+		}
+		return;
+	}
+
+	SHELL_WriteChar(input_buffer[input_index]);
+
+	if (input_buffer[input_index] != '\r') {
+		if (input_index == SHELL_INPUT_BUFFER_SIZE - 1) {
+			SHELL_PrintResult(SHELL_INPUT_BUFFER_SIZE);
+			SHELL_Write("> ");
+			input_index = 0;
+		}
+		input_index += 1;
+		return;
+	}
+
+	input_buffer[input_index] = '\0';
+	SHELL_WriteChar('\n');
+
+	uint32_t argc = 0;
+	SHELL_Result parse_result = SHELL_ParseArgs(input_buffer, argv, SHELL_MAX_TOKENS, &argc);
+	if (parse_result != SHELL_RESULT_OK) {
+		SHELL_PrintResult(parse_result);
 		SHELL_Write("> ");
-		USART_Receive_Line(USART2, buf, sizeof(buf));
-		uint32_t argc = 0;
-		SHELL_Result parse_result = SHELL_ParseArgs(buf, argv, SHELL_MAX_TOKENS, &argc);
+		input_index = 0;
+		return;
+	}
 
-		if (parse_result != SHELL_RESULT_OK) {
-			SHELL_PrintResult(parse_result);
-			continue;
-		}
-
-		if (argc == 0) {
-			continue;
-		}
-
-		const SHELL_Command* command = SHELL_LookupCommand(argv[0]);
-		if (command == 0) {
-			SHELL_PrintResult(SHELL_RESULT_UNKNOWN_COMMAND);
-			continue;
-		}
-
-		SHELL_Result result = SHELL_DispatchCommand(command, argc, argv);
-		if (result != SHELL_RESULT_OK) {
-			SHELL_PrintResult(result);
-		}
+	if (argc == 0) {
+		SHELL_Write("> ");
+		input_index = 0;
+		return;
 	}
 	
+	const SHELL_Command* command = SHELL_LookupCommand(argv[0]);
+	if (command == 0) {
+		SHELL_PrintResult(SHELL_RESULT_UNKNOWN_COMMAND);
+		SHELL_Write("> ");
+		input_index = 0;
+		return;
+	}
+
+	SHELL_Result result = SHELL_DispatchCommand(command, argc, argv);
+	if (result != SHELL_RESULT_OK) {
+		SHELL_PrintResult(result);
+	}
+
+	SHELL_Write("> ");
+	input_index = 0;
 }

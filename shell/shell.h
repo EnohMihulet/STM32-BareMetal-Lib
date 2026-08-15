@@ -37,6 +37,9 @@ void SHELL_Commands_Set(const SHELL_Command* commands, uint32_t command_count);
 void SHELL_PrintCommand(const SHELL_Command* command);
 void SHELL_PrintCommandList(void);
 const SHELL_Command* SHELL_LookupCommand(const char* name);
+
+void SHELL_WriteChar(const char c);
 void SHELL_Write(const char* s);
 
-void SHELL_Start();
+void SHELL_Init();
+void SHELL_Update();

@@ -56,43 +56,48 @@ void USART_Transmit_String(USART_TypeDef* usart, const char* s) {
 	}
 }
 
-char USART_Receive_Char(USART_TypeDef* usart) {
-	while (!MCL_READ_BIT(usart->SR, USART_SR_RXNE_Bit)) {
-	}
-
-	return (uint8_t)usart->DR;
+uint8_t USART_ByteAvailable(USART_TypeDef* usart) {
+	return MCL_READ_BIT(usart->SR, USART_SR_RXNE_Bit);
 }
 
-uint32_t USART_Receive_Line(USART_TypeDef* usart, char* buffer, uint32_t buffer_size) {
-	uint32_t len = 0;
-
-	if (buffer_size == 0) {
+uint8_t USART_Receive_Char(USART_TypeDef* usart, char* c) {
+	if (USART_ByteAvailable(usart)) {
+		*c = usart->DR;
 		return 0;
 	}
-
-	while (1) {
-		char c = USART_Receive_Char(usart);
-
-		if (c == '\r') {
-			buffer[len] = '\0';
-			USART_Transmit_String(usart, "\r\n");
-			return len;
-		}
-
-		if (c == '\b' || c == 0x7F) {
-			if (len > 0) {
-				len--;
-				buffer[len] = '\0';
-				USART_Transmit_String(usart, "\b \b");
-			}
-
-			continue;
-		}
-
-		if (len < buffer_size - 1) {
-			buffer[len] = c;
-			len++;
-			USART_Transmit_Char(usart, c);
-		}
-	}
+	return 1;
 }
+
+// uint32_t USART_Receive_Line(USART_TypeDef* usart, char* buffer, uint32_t buffer_size) {
+// 	uint32_t len = 0;
+// 
+// 	if (buffer_size == 0) {
+// 		return 0;
+// 	}
+// 
+// 	while (1) {
+// 		USART_Receive_Char(usart, c);
+// 
+// 		if (c == '\r') {
+// 			buffer[len] = '\0';
+// 			USART_Transmit_String(usart, "\r\n");
+// 			return len;
+// 		}
+// 
+// 		if (c == '\b' || c == 0x7F) {
+// 			if (len > 0) {
+// 				len--;
+// 				buffer[len] = '\0';
+// 				USART_Transmit_String(usart, "\b \b");
+// 			}
+// 
+// 			continue;
+// 		}
+// 
+// 		if (len < buffer_size - 1) {
+// 			buffer[len] = c;
+// 			len++;
+// 			USART_Transmit_Char(usart, c);
+// 		}
+// 	}
+// }

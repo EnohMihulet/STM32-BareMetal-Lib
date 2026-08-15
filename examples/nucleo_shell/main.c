@@ -5,12 +5,6 @@
 #include "usart.h"
 
 int main(void) {
-	Board_Button_Init();
-	Board_LED_Init();
-	USART2_Init();
-	Example_ShellCommands_Init();
-	SHELL_Start();
-
 	while (1) {
 	}
 
