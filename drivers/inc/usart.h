@@ -28,6 +28,10 @@ typedef struct {
 #define USART6 ((USART_TypeDef*) USART6_BASE)
 
 typedef enum {
+	USART_SR_PE_Bit = 0,
+	USART_SR_FE_Bit = 1,
+	USART_SR_NE_Bit = 2,
+	USART_SR_ORE_Bit = 3,
 	USART_SR_RXNE_Bit = 5,
 	USART_SR_TC_Bit = 6,
 	USART_SR_TXE_Bit = 7,
@@ -144,7 +148,10 @@ static inline void USART_Set_StopBits(USART_TypeDef *usart, USART_Stop stop)
 }
 
 void USART2_Init();
+void USART1_Init();
 
+void USART_Transmit(USART_TypeDef* usart, const char* s, uint32_t length);
+void USART_Transmit_Char_Queued(USART_TypeDef* usart, const char c);
 void USART_Transmit_Char(USART_TypeDef* usart, const char c);
 void USART_Transmit_String(USART_TypeDef* usart, const char* s);
 uint8_t USART_ByteAvailable(USART_TypeDef* usart);

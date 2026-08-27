@@ -23,7 +23,14 @@ typedef enum SHELL_Result {
 } SHELL_Result;
 #undef X
 
-typedef SHELL_Result (*SHELL_CommandHandler)(int argc, const char* argv[]);
+typedef void (*SHELL_WriteFn)(const char* data, uint32_t length, void* context);
+
+typedef struct {
+	SHELL_WriteFn write;
+	void* context;
+} SHELL_Output;
+
+typedef SHELL_Result (*SHELL_CommandHandler)(const SHELL_Output* output, int argc, const char* argv[]);
 
 typedef struct SHELL_Command {
 	const char* name;
@@ -33,13 +40,34 @@ typedef struct SHELL_Command {
 	const char* help;
 } SHELL_Command;
 
+typedef struct {
+	SHELL_Output output;
+	char *data;
+	uint32_t length;
+	uint32_t capacity;
+	uint8_t overflow;
+} SHELL_Buffer;
+
+void SHELL_PrintResult(const SHELL_Output* output, SHELL_Result result);
+
 void SHELL_Commands_Set(const SHELL_Command* commands, uint32_t command_count);
-void SHELL_PrintCommand(const SHELL_Command* command);
-void SHELL_PrintCommandList(void);
+void SHELL_PrintCommand(const SHELL_Output* output, const SHELL_Command* command);
+void SHELL_PrintCommandList(const SHELL_Output* output);
+
 const SHELL_Command* SHELL_LookupCommand(const char* name);
 
-void SHELL_WriteChar(const char c);
-void SHELL_Write(const char* s);
+SHELL_Result SHELL_ExecuteCommand(char* command, const SHELL_Output* output);
+
+void SHELL_Write(const SHELL_Output *output, const char *text);
+void SHELL_WriteChar(const SHELL_Output *output, char value);
+void SHELL_WriteUnsigned(const SHELL_Output *output, uint32_t value);
+
+void SHELL_Buffer_Init(SHELL_Buffer* buffer, char* storage, uint32_t capacity);
+const SHELL_Output* SHELL_Buffer_Output(SHELL_Buffer* buffer);
+void SHELL_Buffer_Reset(SHELL_Buffer* buffer);
+
+void SHELL_Prompt_Defer(void);
+void SHELL_Prompt_Write(void);
 
 void SHELL_Init();
 void SHELL_Update();

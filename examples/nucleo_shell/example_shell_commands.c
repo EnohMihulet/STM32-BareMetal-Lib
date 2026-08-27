@@ -3,25 +3,13 @@
 #include "board_button.h"
 #include "board_led.h"
 #include "shell.h"
+#include "string_helper.h"
 
-static uint8_t Example_CommandStringEquals(const char* a, const char* b) {
-	while (*a != '\0' && *b != '\0') {
-		if (*a != *b) {
-			return 0;
-		}
-
-		a++;
-		b++;
-	}
-
-	return *a == *b;
-}
-
-static SHELL_Result Example_CommandHelp(int argc, const char* argv[]) {
+static SHELL_Result Example_CommandHelp(const SHELL_Output* output, int argc, const char* argv[]) {
 	if (argc == 0) {
 		(void)argv;
 
-		SHELL_PrintCommandList();
+		SHELL_PrintCommandList(output);
 		return SHELL_RESULT_OK;
 	}
 
@@ -30,24 +18,25 @@ static SHELL_Result Example_CommandHelp(int argc, const char* argv[]) {
 		return SHELL_RESULT_UNKNOWN_COMMAND;
 	}
 
-	SHELL_PrintCommand(command);
+	SHELL_PrintCommand(output, command);
 	return SHELL_RESULT_OK;
 }
 
-static SHELL_Result Example_CommandLed(int argc, const char* argv[]) {
+static SHELL_Result Example_CommandLed(const SHELL_Output* output, int argc, const char* argv[]) {
+	(void)output;
 	(void)argc;
 
-	if (Example_CommandStringEquals(argv[0], "on")) {
+	if (STRING_Equals(argv[0], "on")) {
 		LED_On();
 		return SHELL_RESULT_OK;
 	}
 
-	if (Example_CommandStringEquals(argv[0], "off")) {
+	if (STRING_Equals(argv[0], "off")) {
 		LED_Off();
 		return SHELL_RESULT_OK;
 	}
 
-	if (Example_CommandStringEquals(argv[0], "toggle")) {
+	if (STRING_Equals(argv[0], "toggle")) {
 		LED_Toggle();
 		return SHELL_RESULT_OK;
 	}
@@ -55,13 +44,13 @@ static SHELL_Result Example_CommandLed(int argc, const char* argv[]) {
 	return SHELL_RESULT_BAD_ARGUMENT;
 }
 
-static SHELL_Result Example_CommandButton(int argc, const char* argv[]) {
+static SHELL_Result Example_CommandButton(const SHELL_Output* output, int argc, const char* argv[]) {
 	(void)argc;
 	(void)argv;
 
-	SHELL_Write("Button: ");
-	SHELL_Write(Board_Button_IsPressed() ? "pressed" : "released");
-	SHELL_Write("\r\n");
+	SHELL_Write(output, "Button: ");
+	SHELL_Write(output, Board_Button_IsPressed() ? "pressed" : "released");
+	SHELL_Write(output, "\r\n");
 	return SHELL_RESULT_OK;
 }
 

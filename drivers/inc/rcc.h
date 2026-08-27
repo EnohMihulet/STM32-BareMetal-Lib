@@ -168,6 +168,7 @@ static inline void RCC_TIMClock_Disable(TIM_GP_TypeDef* tim) {
 }
 
 typedef enum {
+	RCC_APB2_USART1_Bit = 4,
 	RCC_APB2_SYSCFG_Bit = 14,
 } RCC_APB2ENR_Bit;
 
@@ -182,5 +183,7 @@ static inline void RCC_APB2Clock_Disable(RCC_APB2ENR_Bit bit) {
 }
 
 static inline void RCC_SYSCFGClock_Enable(void)  { RCC_APB2Clock_Enable(RCC_APB2_SYSCFG_Bit); }
+static inline void RCC_USART1Clock_Enable(void) { RCC_APB2Clock_Enable(RCC_APB2_USART1_Bit); }
 
 static inline void RCC_SYSCFGClock_Disable(void) { RCC_APB2Clock_Disable(RCC_APB2_SYSCFG_Bit); }
+static inline void RCC_USART1Clock_Disable(void) { RCC_APB2Clock_Disable(RCC_APB2_USART1_Bit); }

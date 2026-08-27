@@ -12,7 +12,7 @@ SIZE	= arm-none-eabi-size
 
 TARGET = firmware
 
-C_SOURCES	= $(wildcard examples/nucleo_shell/*.c examples/nucleo_shell/app/*.c drivers/src/*.c shell/shell.c)
+C_SOURCES	= $(wildcard examples/nucleo_shell/*.c examples/nucleo_shell/app/*.c drivers/src/*.c devices/esp_at/*.c core/*.c shell/shell.c)
 ASM_SOURCES	= startup/mcl_startup.s
 LD_SCRIPT	= linker/mcl_stm32f446re.ld
 BUILD_DIR	= build
@@ -21,7 +21,7 @@ OBJECTS	= $(C_SOURCES:%.c=$(BUILD_DIR)/%.o)
 OBJECTS	+= $(ASM_SOURCES:%.s=$(BUILD_DIR)/%.o)
 DEPFILES = $(OBJECTS:.o=.d)
 
-C_FLAGS	 = $(MCU) -Icore -Idrivers/inc -Ishell -Iexamples/nucleo_shell -Iexamples/nucleo_shell/app -Wall -Wextra -O0 -g -MMD -MP
+C_FLAGS	 = $(MCU) -Icore -Idrivers/inc -Idevices/esp_at -Ishell -Iexamples/nucleo_shell -Iexamples/nucleo_shell/app -Wall -Wextra -O0 -g -MMD -MP
 LD_FLAGS = $(MCU) -T$(LD_SCRIPT) -Wl,-Map=$(TARGET).map -Wl,--gc-sections -nostdlib
 LD_LIBS  = -lgcc
 
