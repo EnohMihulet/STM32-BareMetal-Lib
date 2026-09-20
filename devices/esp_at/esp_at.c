@@ -24,6 +24,7 @@ typedef enum {
 	ESP_Command_CWJAP,
 	ESP_Command_CIFSR,
 	ESP_Command_CIPMUX,
+	ESP_Command_CIPSERVERMAXCONN,
 	ESP_Command_CIPSERVER,
 	ESP_Command_CIPSTATUS,
 	ESP_Command_Test,
@@ -59,6 +60,7 @@ typedef struct {
 	uint8_t payload_discard;
 	uint8_t rx_connection_id;
 	uint32_t payload_position;
+	uint32_t payload_buffer_length;
 	uint32_t payload_length;
 	uint32_t ipd_started_at;
 	char payload[ESP_PAYLOAD_BUFFER_SIZE];
@@ -84,6 +86,7 @@ typedef struct {
 
 static ESP_Handle esp_handle;
 static volatile uint32_t esp_millis;
+static uint32_t connection_generation;
 
 void ESP_Tick(void) {
 	esp_millis++;
@@ -100,6 +103,7 @@ static void ESP_NetworkDetails_Reset(void) {
 }
 
 static void ESP_TCPDetails_Reset(void) {
+	connection_generation++;
 	esp_handle.active_connection_id = ESP_CONNECTION_ID_INVALID;
 	esp_handle.tcp_state = ESP_TCPState_Disconnected;
 	esp_handle.connection_mode = ESP_ConnectionMode_Single;
@@ -116,6 +120,7 @@ static void ESP_TX_Reset(void) {
 }
 
 static void ESP_TCPConnection_Reset(void) {
+	connection_generation++;
 	esp_handle.active_connection_id = ESP_CONNECTION_ID_INVALID;
 	esp_handle.tcp_state = ESP_TCPState_Disconnected;
 	ESP_TX_Reset();
@@ -126,6 +131,7 @@ static void ESP_Payload_Reset(void) {
 	esp_handle.payload_discard = 0;
 	esp_handle.rx_connection_id = ESP_CONNECTION_ID_INVALID;
 	esp_handle.payload_position= 0;
+	esp_handle.payload_buffer_length = 0;
 	esp_handle.payload_length = 0;
 	esp_handle.ipd_started_at = 0;
 	esp_handle.payload[0] = '\0';
@@ -281,16 +287,23 @@ static void ESP_Line_Process(void) {
 		const char* value = line + 11;
 		uint32_t connection_id;
 		if (STRING_ParseUnsigned(&value, &connection_id) && connection_id <= 4U && *value == ',') {
+			if (esp_handle.active_connection_id != (uint8_t)connection_id) connection_generation++;
 			esp_handle.active_connection_id = (uint8_t)connection_id;
 			esp_handle.tcp_state = ESP_TCPState_Connected;
 		}
 	}
 	else if (esp_handle.line_length > 2 && line[0] >= '0' && line[0] <= '4' && line[1] == ',' && STRING_Equals(&line[2], "CONNECT")) {
-		esp_handle.active_connection_id = (uint8_t)(line[0] - '0');
-		esp_handle.tcp_state = ESP_TCPState_Connected;
+		/* The server admits one client; never let another ID take over its session. */
+		uint8_t connection_id = (uint8_t)(line[0] - '0');
+		if (esp_handle.tcp_state != ESP_TCPState_Connected || esp_handle.active_connection_id == connection_id) {
+			connection_generation++;
+			ESP_TX_Reset();
+			esp_handle.active_connection_id = connection_id;
+			esp_handle.tcp_state = ESP_TCPState_Connected;
+		}
 	}
 	else if (esp_handle.line_length > 2 && line[0] >= '0' && line[0] <= '4' && line[1] == ',' && STRING_Equals(&line[2], "CLOSED")) {
-		ESP_TCPConnection_Reset();
+		if (esp_handle.active_connection_id == (uint8_t)(line[0] - '0')) ESP_TCPConnection_Reset();
 	}
 
 	if (esp_handle.command_waiting &&
@@ -313,21 +326,18 @@ static uint8_t ESP_TCPMetadata_Process(void) {
 
 	esp_handle.rx_connection_id = connection_id <= 4U ? (uint8_t)connection_id : ESP_CONNECTION_ID_INVALID;
 	esp_handle.payload_length = payload_length;
-	esp_handle.payload_discard = connection_id > 4U || connection_id != esp_handle.active_connection_id || payload_length > ESP_PAYLOAD_BUFFER_SIZE;
+	esp_handle.payload_discard = connection_id > 4U || connection_id != esp_handle.active_connection_id;
 	esp_handle.metadata_parsed = 1;
 	ESP_Line_Reset();
 	return 1;
 }
 
 static void ESP_TCPPayload_Process(void) {
-	if (esp_handle.payload_length == 0U || esp_handle.payload_length > ESP_PAYLOAD_BUFFER_SIZE || esp_handle.tcp_receive == 0) {
-		ESP_IPD_Reset();
-		return;
+	if (esp_handle.payload_buffer_length != 0U && esp_handle.tcp_receive != 0) {
+		esp_handle.tcp_receive(esp_handle.rx_connection_id, esp_handle.payload,
+			esp_handle.payload_buffer_length, esp_handle.tcp_receive_context);
 	}
-	
-	esp_handle.tcp_receive(esp_handle.rx_connection_id, esp_handle.payload, esp_handle.payload_length, esp_handle.tcp_receive_context);
-
-	ESP_IPD_Reset();
+	esp_handle.payload_buffer_length = 0;
 }
 
 void ESP_Update(void) {
@@ -354,14 +364,15 @@ void ESP_Update(void) {
 				esp_handle.line[esp_handle.line_length] = '\0';
 			}
 			else {
-				if (!esp_handle.payload_discard && esp_handle.payload_position < ESP_PAYLOAD_BUFFER_SIZE) {
-					esp_handle.payload[esp_handle.payload_position] = c;
+				if (!esp_handle.payload_discard) {
+					esp_handle.payload[esp_handle.payload_buffer_length++] = c;
 				}
 				esp_handle.payload_position++;
 
+				if (esp_handle.payload_buffer_length == ESP_PAYLOAD_BUFFER_SIZE ||
+					esp_handle.payload_position >= esp_handle.payload_length) ESP_TCPPayload_Process();
 				if (esp_handle.payload_position >= esp_handle.payload_length) {
-					if (esp_handle.payload_discard) ESP_IPD_Reset();
-					else ESP_TCPPayload_Process();
+					ESP_IPD_Reset();
 				}
 			}
 			continue;
@@ -497,6 +508,10 @@ ESP_Result ESP_Init(const ESP_Config* config) {
 	if (result != ESP_Result_Ok) return result;
 	esp_handle.connection_mode = ESP_ConnectionMode_Multiple;
 
+	/* ESP-AT servers require CIPMUX=1 even when only one client is supported. */
+	result = ESP_Command_Execute(ESP_Command_CIPSERVERMAXCONN, "AT+CIPSERVERMAXCONN=1", ESP_TIMEOUT_MS);
+	if (result != ESP_Result_Ok) return result;
+
 	char server_command[ESP_COMMAND_BUFFER_SIZE];
 	int server_command_length = STRING_snprintf(
 		server_command,
@@ -542,6 +557,10 @@ uint8_t ESP_ConnectionID_Get(void) {
 	return esp_handle.active_connection_id;
 }
 
+uint32_t ESP_ConnectionGeneration_Get(void) {
+	return connection_generation;
+}
+
 ESP_ConnectionMode ESP_ConnectionMode_Get(void) {
 	return esp_handle.connection_mode;
 }
@@ -569,7 +588,9 @@ ESP_Result ESP_TCPSend(uint8_t connection_id, const char* data, uint32_t length)
 	if (data == 0 || length == 0U) return ESP_Result_InvalidCommand;
 	if (length > ESP_TX_BUFFER_SIZE) return ESP_Result_Capacity;
 
+	uint32_t generation = connection_generation;
 	ESP_Update();
+	if (generation != connection_generation) return ESP_Result_Disconnected;
 	if (esp_handle.tx_state != ESP_TX_State_Idle || esp_handle.command_waiting) return ESP_Result_Busy;
 	if (esp_handle.tcp_state != ESP_TCPState_Connected || connection_id != esp_handle.active_connection_id) {
 		return ESP_Result_Disconnected;

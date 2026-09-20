@@ -50,6 +50,7 @@ typedef enum {
     ESP_ServerState_Started,
 } ESP_ServerState;
 
+/* Payloads are delivered in bounded chunks, not application message boundaries. */
 typedef void (*ESP_TCPReceiveFn)(uint8_t connection_id, const char* data, uint32_t length, void* context);
 
 ESP_Result ESP_Init(const ESP_Config* config);
@@ -62,6 +63,8 @@ const uint8_t* ESP_IP_Get(void);
 
 ESP_TCPState ESP_TCPState_Get(void);
 uint8_t ESP_ConnectionID_Get(void);
+/* Changes on disconnect/reconnect, including reuse of the same connection ID. */
+uint32_t ESP_ConnectionGeneration_Get(void);
 ESP_ConnectionMode ESP_ConnectionMode_Get(void);
 ESP_ServerState ESP_ServerState_Get(void);
 ESP_Result ESP_TCPStatus_Query(void);
